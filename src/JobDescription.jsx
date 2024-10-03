@@ -6,7 +6,7 @@ const JobDescription = () => {
   const [error, setError] = useState("");
 
   const generateContent = async () => {
-    const apiKey = "AIzaSyAvNVzRtjCnW7tWeIa0sS4pYIDGHz_TLZY"; // Replace with your actual API key
+    const apiKey = ""; // Replace with your actual API key
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     const requestBody = {
