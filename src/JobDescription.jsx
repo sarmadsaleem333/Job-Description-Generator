@@ -2,11 +2,14 @@ import React, { useState } from "react";
 
 const JobDescription = () => {
   const [prompt, setPrompt] = useState("");
-  const [response, setResponse] = useState("");
+  const [description, setDescription] = useState("");
+  const [responsibilities, setResponsibilities] = useState([]);
+  const [requirements, setRequirements] = useState([]);
+  const [benefits, setBenefits] = useState([]);
   const [error, setError] = useState("");
 
   const generateContent = async () => {
-    const apiKey = ""; // Replace with your actual API key
+    const apiKey = "AIzaSyAvNVzRtjCnW7tWeIa0sS4pYIDGHz_TLZY";
     const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
 
     const requestBody = {
@@ -14,7 +17,15 @@ const JobDescription = () => {
         {
           parts: [
             {
-              text: `You are a helpful assistant that generates a paragraph of a job description based on a job title provided by the user. Focus on highlighting the key responsibilities of the role, and start the description with 'We are'.If you are unable to generate the job description for given title or it exceeds your ethical guidelines or any thing asked except job title you should say,this that' No description found for this job title'.The job title is ${prompt}`,
+              text: `You are a helpful assistant that generates a comprehensive job description based on a job title provided by the user. 
+                Your response should include the following sections:
+                1. "We are" statement introducing the job description not specifying our company only providing job description summary for the given title for 3-4 lines.
+                2. Key responsibilities (5-6 bullet points).
+                3. Requirements (5-6 bullet points).
+                4. Random 6-7 benefits related to the job maybe like monthly team dinners, outings.
+                
+                The job title is: ${prompt}. Give me response in the format of a JavaScript object with keys description, responsibilities, requirements, benefits and values as arrays of strings.
+                If you cannot provide a description for the given job title or it exceeds ethical guidelines, reply with the following empty JavaScript object: { "description": "No description found for this job title", "responsibilities": [], "requirements": [], "benefits": [] }.`,
             },
           ],
         },
@@ -33,35 +44,81 @@ const JobDescription = () => {
       const data = await response.json();
 
       if (response.ok) {
-        console.log(data.candidates[0].content.parts[0].text);
-        setResponse(
-          data.candidates[0].content.parts[0].text || "No response generated."
-        );
+        console.log("data", data);
+        const generatedText = data.candidates[0].content.parts[0].text;
+
+        const jsonString = generatedText.replace(/```json\n|\n```/g, "").trim();
+        const parsedData = JSON.parse(jsonString);
+
+        console.log("Parsed data:", parsedData);
+
+        // Set state based on parsed data
+        setDescription(parsedData.description);
+        setResponsibilities(parsedData.responsibilities);
+        setRequirements(parsedData.requirements);
+        setBenefits(parsedData.benefits);
+
         setError("");
       } else {
-        setError(data.error.message || "Error generating content.");
+        // Fallback to a structured response indicating no description
+        setDescription("No description found for this job title.");
+        setResponsibilities([]);
+        setRequirements([]);
+        setBenefits([]);
       }
     } catch (err) {
       console.log(err);
       setError("Network or server error.");
+      // Optionally, reset the data on error
+      setDescription("No description found for this job title.");
+      setResponsibilities([]);
+      setRequirements([]);
+      setBenefits([]);
     }
   };
 
   return (
     <div>
-      <h1>AI Content Generator</h1>
+      <h1>AI Job Description Generator</h1>
       <input
         type="text"
         value={prompt}
         onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Enter Job title"
+        placeholder="Enter Job Title"
       />
-      <button onClick={generateContent}>Generate Content</button>
+      <button onClick={generateContent}>Generate Description</button>
 
-      {response && (
+      {description && (
         <div>
-          <h3>AI Response:</h3>
-          <p>{response}</p>
+          <h3>Job Description</h3>
+          <p>{description}</p>
+
+          <h3>Key Responsibilities</h3>
+          <ul>
+            {responsibilities.length > 0 ? (
+              responsibilities.map((resp, index) => <li key={index}>{resp}</li>)
+            ) : (
+              <li>No responsibilities found.</li>
+            )}
+          </ul>
+
+          <h3>Requirements</h3>
+          <ul>
+            {requirements.length > 0 ? (
+              requirements.map((req, index) => <li key={index}>{req}</li>)
+            ) : (
+              <li>No requirements found.</li>
+            )}
+          </ul>
+
+          <h3>Benefits</h3>
+          <ul>
+            {benefits.length > 0 ? (
+              benefits.map((benefit, index) => <li key={index}>{benefit}</li>)
+            ) : (
+              <li>No benefits found.</li>
+            )}
+          </ul>
         </div>
       )}
 
