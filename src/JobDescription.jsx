@@ -25,7 +25,7 @@ const JobDescription = () => {
                 4. Random 6-7 benefits related to the job maybe like monthly team dinners, outings.
                 
                 The job title is: ${prompt}. Give me response in the format of a JavaScript object with keys description, responsibilities, requirements, benefits and values as arrays of strings.
-                If you cannot provide a description for the given job title or it exceeds ethical guidelines, reply with the following empty JavaScript object: { "description": "No description found for this job title", "responsibilities": [], "requirements": [], "benefits": [] }.`,
+               If there is no job user entered or If you cannot provide a description for the given job title or it exceeds ethical guidelines, reply with the following empty JavaScript object: { "description": "No description found for this job title", "responsibilities": [], "requirements": [], "benefits": [] }.`,
             },
           ],
         },
@@ -88,39 +88,41 @@ const JobDescription = () => {
       />
       <button onClick={generateContent}>Generate Description</button>
 
-      {description && (
-        <div>
-          <h3>Job Description</h3>
-          <p>{description}</p>
+      {/* Job Description Section */}
+      <h3>Job Description</h3>
+      <textarea
+        value={description}
+        readOnly
+        rows={4}
+        style={{ width: "100%", marginBottom: "1rem" }}
+      />
 
-          <h3>Key Responsibilities</h3>
-          <ul>
-            {responsibilities.length > 0 ? (
-              responsibilities.map((resp, index) => <li key={index}>{resp}</li>)
-            ) : (
-              <li>No responsibilities found.</li>
-            )}
-          </ul>
+      {/* Responsibilities Section */}
+      <h3>Key Responsibilities</h3>
+      <textarea
+        value={responsibilities.join("\n")}
+        readOnly
+        rows={4}
+        style={{ width: "100%", marginBottom: "1rem" }}
+      />
 
-          <h3>Requirements</h3>
-          <ul>
-            {requirements.length > 0 ? (
-              requirements.map((req, index) => <li key={index}>{req}</li>)
-            ) : (
-              <li>No requirements found.</li>
-            )}
-          </ul>
+      {/* Requirements Section */}
+      <h3>Requirements</h3>
+      <textarea
+        value={requirements.join("\n")}
+        readOnly
+        rows={4}
+        style={{ width: "100%", marginBottom: "1rem" }}
+      />
 
-          <h3>Benefits</h3>
-          <ul>
-            {benefits.length > 0 ? (
-              benefits.map((benefit, index) => <li key={index}>{benefit}</li>)
-            ) : (
-              <li>No benefits found.</li>
-            )}
-          </ul>
-        </div>
-      )}
+      {/* Benefits Section */}
+      <h3>Benefits</h3>
+      <textarea
+        value={benefits.join("\n")}
+        readOnly
+        rows={4}
+        style={{ width: "100%", marginBottom: "1rem" }}
+      />
 
       {error && <p style={{ color: "red" }}>{error}</p>}
     </div>
