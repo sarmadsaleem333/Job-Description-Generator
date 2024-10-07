@@ -12,6 +12,7 @@ const JobDescription = () => {
   const [error, setError] = useState("");
 
   // getting job details from api made for gemini
+
   const getJobDetailsMutation = useMutation({
     mutationFn: (values) => {
       console.log("mss", values);
