@@ -45,7 +45,7 @@ export default function SkillSearch() {
 
   const addSkillMutation = useMutation({
     mutationFn: (values) => {
-      return axios.post(`http://127.0.0.1:8000/addskill/`, {
+      return axios.post(`http://127.0.0.1:8000/search/`, {
         skill_name: values.skill,
         skill_id: values.id,
       });
@@ -64,7 +64,7 @@ export default function SkillSearch() {
     mutationFn: (values) => {
       setLoading(true);
       console.log("values", values);
-      return axios.delete(`http://127.0.0.1:8000/delete_skill/${values}/`);
+      return axios.delete(`http://127.0.0.1:8000/search/${values}/`);
     },
     onSuccess: (data) => {
       setLoading(false);
