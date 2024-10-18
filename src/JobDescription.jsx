@@ -17,103 +17,168 @@ const JobDescription = () => {
   const [responsibilities, setResponsibilities] = useState("");
   const [requirements, setRequirements] = useState("");
   const [benefits, setBenefits] = useState("");
+  const [skills, setSkills] = useState([]); // Skill recommendations from the API
+  const [selectedSkills, setSelectedSkills] = useState([]); // To store user's selected skills
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false); // Loader state
+  const [isAIUsed, setIsAIUsed] = useState(false); // Track if AI is used for generation
 
-  // getting job details from api made for gemini
-
+  // getting job details from the API based on the user's input (dynamic API call)
   const getJobDetailsMutation = useMutation({
-    mutationFn: (values) => {
-      const protocol = window.location.protocol;
+    mutationFn: (jobTitle) => {
       setLoading(true); // Show loader when the request starts
-
-      return axios.post(`https://9934ace31540.ngrok.app/api/jobs/ai-content`, {
-        job_title: values,
-      });
+      return axios.get(
+        `http://127.0.0.1:8000/recommend_skills/?job_title=${jobTitle}`,
+        {}
+      );
     },
     onSuccess: (data) => {
       setDescription(data.data.description || "");
       setResponsibilities(data.data.responsibilities || "");
       setRequirements(data.data.requirements || "");
       setBenefits(data.data.benefits || "");
+      setSkills(data.data.skills || []); // Set skills recommendation from the API
       setError("");
-      setLoading(false); // Hide loader when request completes
+      setIsAIUsed(true); // AI was used
+      setLoading(false); // Hide loader when the request completes
     },
     onError: (error) => {
       setDescription("No description found for this job title.");
       setResponsibilities("");
       setRequirements("");
       setBenefits("");
+      setSkills([]); // Reset skills on error
       setError("Something went wrong, please try again.");
       setLoading(false); // Hide loader on error
     },
   });
 
-  const getJobDetails = async (values) => {
-    await getJobDetailsMutation.mutate(values);
+  const getJobDetails = async () => {
+    if (prompt) {
+      await getJobDetailsMutation.mutate(prompt); // Use dynamic job title from user input
+    } else {
+      setError("Please enter a job title.");
+    }
+  };
+
+  const handleSkillSelection = (skill) => {
+    if (selectedSkills.find((s) => s.skill_id === skill.skill_id)) {
+      setSelectedSkills(
+        selectedSkills.filter((s) => s.skill_id !== skill.skill_id)
+      );
+    } else {
+      setSelectedSkills([...selectedSkills, skill]);
+    }
+  };
+
+  const handleSubmit = () => {
+    const jobDetails = {
+      title: prompt,
+      description,
+      responsibilities,
+      requirements,
+      benefits,
+      skills: selectedSkills.map((skill) => ({
+        skill_id: skill.skill_id,
+        skill_name: skill.skill_name,
+      })),
+    };
+
+    console.log("Submitting Job Details: ", jobDetails);
   };
 
   return (
     <div>
       <h1>AI Job Description Generator</h1>
-      <input
-        type="text"
-        value={prompt}
-        onChange={(e) => setPrompt(e.target.value)}
-        placeholder="Enter Job Title"
+
+      <div style={{ marginBottom: "1rem" }}>
+        <label>
+          <strong>Enter a Job Title:</strong>
+        </label>
+        <input
+          type="text"
+          value={prompt}
+          onChange={(e) => setPrompt(e.target.value)}
+          placeholder="Enter Job Title"
+        />
+        <button onClick={getJobDetails}>Generate with AI</button>
+      </div>
+
+      {/* Display the loader */}
+      {loading && <Loader />}
+      <h3>Write Job Description</h3>
+
+      <ReactQuill
+        value={description}
+        onChange={setDescription} // Make editable
+        theme="snow"
+        style={{ marginBottom: "1rem" }}
       />
-      <button onClick={() => getJobDetails(prompt)}>
-        Generate Description
+
+      <h3>Key Responsibilities</h3>
+      <ReactQuill
+        value={responsibilities}
+        onChange={setResponsibilities} // Make editable
+        theme="snow"
+        style={{ marginBottom: "1rem" }}
+      />
+
+      <h3>Requirements</h3>
+      <ReactQuill
+        value={requirements}
+        onChange={setRequirements} // Make editable
+        theme="snow"
+        style={{ marginBottom: "1rem" }}
+      />
+
+      <h3>Benefits</h3>
+      <ReactQuill
+        value={benefits}
+        onChange={setBenefits} // Make editable
+        theme="snow"
+        style={{ marginBottom: "1rem" }}
+      />
+
+      {/* Skill Recommendations */}
+      <h3>Recommended Skills {isAIUsed && "(AI Recommendations)"}</h3>
+      <div style={{ marginBottom: "1rem", display: "flex", flexWrap: "wrap" }}>
+        {skills.length > 0 ? (
+          skills.map((skill) => (
+            <div
+              key={skill.skill_id}
+              onClick={() => handleSkillSelection(skill)}
+              style={{
+                padding: "0.5rem 1rem",
+                margin: "0.5rem",
+                borderRadius: "20px",
+                backgroundColor: selectedSkills.find(
+                  (s) => s.skill_id === skill.skill_id
+                )
+                  ? "#4CAF50"
+                  : "#f0f0f0",
+                cursor: "pointer",
+                color: selectedSkills.find((s) => s.skill_id === skill.skill_id)
+                  ? "#fff"
+                  : "#000",
+              }}
+            >
+              {skill.skill_name}
+            </div>
+          ))
+        ) : (
+          <p>No skill recommendations available.</p>
+        )}
+      </div>
+
+      {/* Submit Button */}
+      <button onClick={handleSubmit} style={{ marginTop: "1rem" }}>
+        Submit Job
       </button>
-
-      {loading ? ( // Show the loader when loading is true
-        <Loader />
-      ) : (
-        <>
-          {/* Job Description Section */}
-          <h3>Job Description</h3>
-          <ReactQuill
-            value={description}
-            readOnly
-            theme="snow"
-            style={{ marginBottom: "1rem" }}
-          />
-
-          {/* Responsibilities Section */}
-          <h3>Key Responsibilities</h3>
-          <ReactQuill
-            value={responsibilities}
-            readOnly
-            theme="snow"
-            style={{ marginBottom: "1rem" }}
-          />
-
-          {/* Requirements Section */}
-          <h3>Requirements</h3>
-          <ReactQuill
-            value={requirements}
-            readOnly
-            theme="snow"
-            style={{ marginBottom: "1rem" }}
-          />
-
-          {/* Benefits Section */}
-          <h3>Benefits</h3>
-          <ReactQuill
-            value={benefits}
-            readOnly
-            theme="snow"
-            style={{ marginBottom: "1rem" }}
-          />
-
-          {error && <p style={{ color: "red" }}>{error}</p>}
-        </>
-      )}
     </div>
   );
 };
 
-// Simple CSS for loader
+// Loader CSS
 const style = document.createElement("style");
 style.innerHTML = `
   .loader {
